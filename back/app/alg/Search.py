@@ -26,17 +26,18 @@ def analyse_vec(vec:list) -> int:
             count+=1
     return count
 
-def check_route(number:int,routes:list[list[int]]):
+def check_route(number:int,routes:list[list[int]]) -> bool:
     for route in routes:
         if number in route:
             return True
     return False
 
+
 if __name__=="__main__":
     nodes=[]
     Ship=int(input('船の数を入力'))#船の数
     #データの入力
-    with open('ShipDate2.csv',encoding="utf-8") as f:
+    with open('ShipDate2.csv',encoding="shift-jis") as f:
         ShipDate=csv.reader(f)
         for row in ShipDate:
             node=Node()
@@ -80,8 +81,11 @@ if __name__=="__main__":
                 else:
                     if route!=[j]:
                         routes.append(route)
+                        if not check_route(j,routes):
+                            routes.append([j])
                     if j in route:
-                        routes.append([j])
+                        if not check_route(j,routes):
+                            routes.append([j])
         else:
             if flag:
                 if not check_route(j,routes):
@@ -104,7 +108,7 @@ if __name__=="__main__":
         c+=len(i)
     print(c)
     print(len(net.A))
-    print(len(routes))
+    print(test)
     for i in [x for x,y in enumerate(test) if y!=1]:
         print(f'{i} {analyse_vec(net.A.T[i])} {analyse_vec(net.A[i])} {test[i]}')
     for route in routes:
