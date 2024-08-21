@@ -118,4 +118,3 @@ if __name__=="__main__":
         reduce_nodes.append(node)
     reduce_net=Network(reduce_nodes)
     reduce_net.gen_network(st_turnback)
-    print(reduce_net.A)
