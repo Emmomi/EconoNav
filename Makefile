@@ -1,1 +1,2 @@
-fmt: yapf -ir .
+fmt:
+	yapf -ir .
