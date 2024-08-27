@@ -44,7 +44,7 @@ def edit_table(Dh,Dt,Ah,At,x):
                 s=j
                 break
         table.append([Dh[i],Dt[i],Ah[i],At[i],s])
-    with open('TimeTable.csv','w') as f:
+    with open('TimeTable1.csv','w') as f:
         writer=csv.writer(f)
         writer.writerows(table)
 
@@ -56,7 +56,7 @@ if __name__=='__main__':
     At=[]
     Ship=int(input('船の数を入力'))#船の数
     #データの入力
-    with open('ShipDate2.csv') as f:
+    with open('ShipDate2.csv',encoding="shift_jis") as f:
         ShipDate=csv.reader(f)
         for row in ShipDate:
             Dh.append(row[1])
