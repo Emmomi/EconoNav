@@ -1,6 +1,7 @@
 from Network import Trans,Node,Network
 import csv
 import numpy as np
+import pulp
 
 def Time_lag(Arrival,Departure) -> int:
     if int(Arrival/100)==int(Departure/100):
@@ -17,7 +18,10 @@ def st_turnback(node1:Node,node2:Node) -> bool:
         return False
 
 def st_coloring(node1:Node,node2:Node) -> bool:
-    pass
+    if (node1.trans["time"].after<node2.trans["time"].befor and node2.trans["time"].after<node1.trans["time"].befor):
+        return True
+    else:
+        return False
 
 def analyse_vec(vec:list) -> int:
     count=0
@@ -44,6 +48,7 @@ if __name__=="__main__":
             node.add_trans("time",Trans(befor=int(row[2]),after=int(row[4])))
             node.add_trans("harbor",Trans(befor=row[1],after=row[3]))
             nodes.append(node)
+    assigns=[0 for i in range(len(nodes))]#船の割り当て
     net=Network(nodes)
     net.gen_network(st_turnback)
     routes=[]
@@ -119,3 +124,35 @@ if __name__=="__main__":
     reduce_net=Network(reduce_nodes)
     reduce_net.gen_network(st_turnback)
     print(reduce_net.A)
+
+    compressed_nodes=[]
+    for r in routes:
+        node=Node()
+        node.add_trans("harbor",Trans(befor=nodes[r[0]].trans["harbor"].befor,after=nodes[r[-1]].trans["harbor"].after))
+        node.add_trans("time",Trans(befor=nodes[r[0]].trans["time"].befor,after=nodes[r[-1]].trans["time"].after))
+        compressed_nodes.append(node)
+    compressed_net=Network(compressed_nodes)
+    compressed_net.gen_network(st_coloring)
+
+    problem=pulp.LpProblem("test",pulp.LpMinimize)
+    var=pulp.LpVariable.dicts('VAR',(range(len(compressed_net.nodes)),range(Ship)),0,1,'Binary')
+    for i in range(len(compressed_net.nodes)):
+        problem+=pulp.lpSum([var[i][j] for j in range(Ship)])==1
+        for j in range(len(compressed_net.nodes)):
+            if compressed_net.A[i][j]==1:
+                for k in range(Ship):
+                    problem+=var[i][k]+var[j][k]<=1
+
+    problem.solve()
+    for i in range(len(compressed_net.nodes)):
+        for j in range(Ship):
+            if var[i][j].value()==1:
+                for n in routes[i]:
+                    assigns[n]=j
+                print(f'{i} {j}')
+    table=[]
+    for i in range(len(assigns)):
+        table.append([nodes[i].trans["time"].befor,nodes[i].trans["harbor"].befor,nodes[i].trans["time"].after,nodes[i].trans["harbor"].after,assigns[i]])
+    with open('TimeTable3.csv','w') as f:
+        writer=csv.writer(f)
+        writer.writerows(table)
