@@ -25,11 +25,18 @@ def st_turnback(node1: Node, node2: Node) -> bool:
         return False
 
 
+def check_coloring(node1: Node, node2: Node) -> bool:
+    return (
+        node1.trans["time"].befor <= node2.trans["time"].befor
+        and node1.trans["time"].after >= node2.trans["time"].befor
+        ) or (
+            node1.trans["time"].befor <= node2.trans["time"].after
+            and node1.trans["time"].after >= node2.trans["time"].after
+            )
+
+
 def st_coloring(node1: Node, node2: Node) -> bool:
-    if (
-        node1.trans["time"].after < node2.trans["time"].befor
-        and node2.trans["time"].after < node1.trans["time"].befor
-        ):
+    if (check_coloring(node1, node2) or check_coloring(node2, node1)):
         return True
     else:
         return False
@@ -179,8 +186,8 @@ if __name__ == "__main__":
         )
     for i in range(len(compressed_net.nodes)):
         problem += pulp.lpSum([var[i][j] for j in range(Ship)]) == 1
-        for j in range(len(compressed_net.nodes)):
-            if compressed_net.A[i][j] == 1:
+        for j in range(i + 1):
+            if compressed_net.A[i][j] == 1 and i != j:
                 for k in range(Ship):
                     problem += var[i][k] + var[j][k] <= 1
 
@@ -201,5 +208,5 @@ if __name__ == "__main__":
                 ]
             )
     with open('TimeTable3.csv', 'w') as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f, lineterminator='\n')
         writer.writerows(table)
