@@ -56,12 +56,22 @@ def check_route(number: int, routes: list[list[int]]) -> bool:
             return True
     return False
 
+def cost_ship(ship: int, time: int) -> int:
+    fuel_arr = [10, 20, 30, 14, 21, 17, 0, 0, 0, 0]
+    return fuel_arr[ship] * time
+
+def culc_cost(ship:int, nodes: list[Node]) -> int:
+    time = 0
+    for node in nodes:
+        time += Time_lag(node.trans["time"].befor, node.trans["time"].after)
+    return cost_ship(ship, time)
+
 
 if __name__ == "__main__":
     nodes = []
     Ship = int(input('船の数を入力'))    #船の数
     #データの入力
-    with open('ShipDate2.csv', encoding="shift-jis") as f:
+    with open('ShipDate3.csv', encoding="shift-jis") as f:
         ShipDate = csv.reader(f)
         for row in ShipDate:
             node = Node()
@@ -184,6 +194,7 @@ if __name__ == "__main__":
     var = pulp.LpVariable.dicts(
         'VAR', (range(len(compressed_net.nodes)), range(Ship)), 0, 1, 'Binary'
         )
+    problem += pulp.lpSum([var[i][j]*culc_cost(j, [nodes[k] for k in routes[i]]) for j in range(Ship) for i in range(len(compressed_net.nodes))])
     for i in range(len(compressed_net.nodes)):
         problem += pulp.lpSum([var[i][j] for j in range(Ship)]) == 1
         for j in range(i + 1):
@@ -192,6 +203,8 @@ if __name__ == "__main__":
                     problem += var[i][k] + var[j][k] <= 1
 
     problem.solve()
+    print(pulp.LpStatus[problem.status])
+    print(pulp.value(problem.objective))
     for i in range(len(compressed_net.nodes)):
         for j in range(Ship):
             if var[i][j].value() == 1:
@@ -207,6 +220,6 @@ if __name__ == "__main__":
                 assigns[i]
                 ]
             )
-    with open('TimeTable3.csv', 'w') as f:
+    with open('TimeTable4.csv', 'w') as f:
         writer = csv.writer(f, lineterminator='\n')
         writer.writerows(table)
